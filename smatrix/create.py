@@ -48,3 +48,20 @@ def create(args):
         os.symlink(inst.dir, cfg["job_dir"] / str(inst.id))
 
     slurm.create_supplementary_files(cfg)
+    if args.start:
+        job_id = slurm.execute_batch(cfg)
+        with open(cfg["root_dir"] / "job_id", "w") as f:
+            f.write(str(job_id))
+        log.info(
+            f"[bold yellow]Started matrix with job ID {job_id}[/]",
+            extra={"markup": True},
+        )
+    else:
+        log.warn(
+            f"[bold red]Did not start the matrix, as the --start flag was not passed. You can manually start it using:[/]",
+            extra={"markup": True},
+        )
+        log.warn(
+            f"$ sbatch {cfg['root_dir']}/executor.sh",
+            extra={"markup": True},
+        )

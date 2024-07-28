@@ -1,6 +1,7 @@
 import argparse
 import toml
 import logging
+import sys
 from rich.logging import RichHandler
 
 from . import create
@@ -34,7 +35,10 @@ create_parser.set_defaults(func=create.create)
 
 ps_parser = subparsers.add_parser("ps", description="See status of started job matrix")
 ps_parser.add_argument(
-    "--job-id", type=int, required=False, help="The ID of the job to provide"
+    "--matrix-path",
+    type=int,
+    required=False,
+    help="The path of the matrix which has been started",
 )
 ps_parser.set_defaults(func=slurm.ps)
 
@@ -56,4 +60,4 @@ def main():
     if args.verbose:
         log.setLevel("DEBUG")
 
-    args.func(args)
+    sys.exit(args.func(args))
