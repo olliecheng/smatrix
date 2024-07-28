@@ -1,0 +1,20 @@
+[general]
+name = "FLAMES_test"
+# root_label = ""
+# instance_label = "$FILENAME_run"
+
+[matrix]
+"file/name" = [ "CAL045", "CAL123" ]
+"abc_name" = [ "CAL045", "CAL123" ]
+
+# format:
+# "new_path" = "real_path"
+# [symlinks]
+# "test/file" = "123"
+
+[script]
+code = """
+#test
+123
+123""\"
+"""
