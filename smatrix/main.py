@@ -36,7 +36,7 @@ create_parser.set_defaults(func=create.create)
 ps_parser = subparsers.add_parser("ps", description="See status of started job matrix")
 ps_parser.add_argument(
     "--matrix-path",
-    type=int,
+    type=str,
     required=False,
     help="The path of the matrix which has been started",
 )

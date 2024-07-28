@@ -3,25 +3,28 @@ import subprocess
 import re
 import json
 import logging
+import copy
 
 from rich.console import Console
 from rich.table import Table
+from rich.text import Text
 
 log = logging.getLogger("smatrix")
 
 MAIN_EXECUTOR_HEADER = """#!/bin/bash
-#SBATCH --export-file=jobs/%a/job_environment
 #SBATCH --error=jobs/%a/slurm-%A.out
 #SBATCH --output=jobs/%a/slurm-%A.out
-#SBATCH --array=0-{count_m_1}
+#SBATCH --chdir={root_dir}
+#SBATCH --array=0-{count_m_1}{concurrent}
 """
 
 MAIN_EXECUTOR_BODY = """
+set -e
+
 cd {root_dir}
-
-echo $SLURM_JOB_ID > job_id
-
-cd jobs/%a/
+echo $SLURM_ARRAY_JOB_ID > job_id
+cd jobs/$SLURM_ARRAY_TASK_ID/
+source load_env.sh
 
 sh job_run.sh
 """
@@ -37,12 +40,23 @@ assert MAIN_EXECUTOR_HEADER.endswith("\n")
 
 def create_supplementary_files(cfg):
     parameters = "\n".join("#SBATCH " + x for x in cfg["general"]["params"])
+
+    if cfg["general"]["concurrent"]:
+        concurrent = "%" + str(cfg["general"]["concurrent"])
+    else:
+        concurrent = ""
+
     with open(cfg["root_dir"] / "executor.sh", "w") as f:
         f.write(
-            MAIN_EXECUTOR_HEADER.format(count_m_1=cfg["count"] - 1, **cfg)
+            MAIN_EXECUTOR_HEADER.format(count_m_1=cfg["count"] - 1,
+                                        concurrent=concurrent,
+                                        **cfg)
             + parameters
             + MAIN_EXECUTOR_BODY.format(**cfg)
         )
+
+    with open(cfg["root_dir"] / "matrix_config_snapshot.json", "w") as f:
+        json.dump(cfg, f, default=str)
 
 
 def execute_batch(cfg):
@@ -59,8 +73,7 @@ def execute_batch(cfg):
     job_id = groups.group(1)
     return job_id
 
-
-def ps(args):
+def find_loc_of_executing(args):
     matrix_path = args.matrix_path
     if not matrix_path:
         # find it using path
@@ -75,6 +88,7 @@ def ps(args):
                     if new_job_id > job_id:
                         job_id = new_job_id
                         matrix_path = job_f.parent
+                    found = True
                 except ValueError:
                     pass
         if not found:
@@ -85,14 +99,37 @@ def ps(args):
     else:
         with open(matrix_path / Path("job_id"), "r") as f:
             job_id = int(f.read())
+    return matrix_path, job_id
+
+def ps(args):
+    matrix_path, job_id = find_loc_of_executing(args)
+    
+    log.info(f"Using matrix at location {matrix_path}")
 
     result = subprocess.run(
-        ["sacct", "-q", str(job_id), "--json"],
+        ["sacct", "-j", str(job_id), "--json"],
         capture_output=True,
         text=True,
         check=True,
     )
     data = json.loads(result.stdout)
+
+    with open(matrix_path / "matrix_config_snapshot.json", "r") as f:
+        cfg = json.load(f)
+
+    jobs = []
+    current_idx = 0
+    for job in data["jobs"]:
+        if job["array"]["task_id"]["set"]:
+            current_idx = job["array"]["task_id"]["number"]
+            jobs.append(job)
+        else:
+            for i in range(current_idx + 1, cfg["count"]):
+                new_job = copy.deepcopy(job)
+                new_job["array"]["task_id"]["set"] = True
+                new_job["array"]["task_id"]["number"] = i
+
+                jobs.append(new_job)
 
     table = Table(title=f"Instances for matrix job {job_id}", expand=True)
 
@@ -100,10 +137,21 @@ def ps(args):
     table.add_column("status")
     table.add_column("start")
 
-    for job in data["jobs"]:
-        id = job["array"]["task_id"]["number"]
-        start = job["time"]["start"]
-        status = " ".join(job["exit_code"]["status"])
+    for job in jobs:
+        id = str(job["array"]["task_id"]["number"])
+        start = str(job["time"]["start"])
+
+        status_raw = " ".join(job["state"]["current"])
+        # status_raw = job["state"]["current"]
+        status = Text(status_raw)
+
+        # add colour
+        if "FAILED" in status_raw:
+            status.stylize("bold red")
+        elif "COMPLETED" in status_raw:
+            status.stylize("bright_green")
+        elif "RUNNING" in status_raw:
+            status.stylize("magenta")
 
         table.add_row(id, status, start)
 

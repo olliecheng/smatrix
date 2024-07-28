@@ -47,11 +47,12 @@ def validate(input_file):
                 "general": {
                     "name": str,
                     "params": [str],
+                    "concurrent": int,
                     # the instance and root labels are both optional
                     Optional(
                         "instance_label", default="${MATRIX_JOB_ID}_${MATRIX_JOB_LABEL}"
                     ): str,
-                    Optional("root_label", default="%Y%m%d_%H%M_$MATRIX_NAME"): str,
+                    Optional("root_label", default="%Y%m%d_%H%M%S_$MATRIX_NAME"): str,
                 },
                 # each string key value should be accompanied by a corresponding string or dictionary of parameters
                 "matrix": {
