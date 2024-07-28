@@ -20,8 +20,6 @@ class Instance:
         # 0 when the job hasn't started yet
         self.slurm_id = 0
 
-        self.dry_run = self.cfg["dry_run"]
-
         self.env = config.get_environment(cfg, state, id)
 
         # create subdirectory folder
