@@ -13,6 +13,20 @@ It is not uncommon to want to run the same command, but with minor changes. For 
  <a href="#example">Example</a> &nbsp;&nbsp; | &nbsp;&nbsp; <a href="#usage">Usage</a> &nbsp;&nbsp; | &nbsp;&nbsp; <a href="#installation">Installation</a>
 </div>
 
+## Getting started
+You don't need to necessarily read the examples down below to get started. First, install smatrix using:
+```sh
+# todo
+```
+and then you can generate a default configuration file, which has prepopulated parameters and documentation, using:
+```sh
+$ smatrix init <config_file_to_write_to>
+```
+Then, once you've configured everything, you can create a matrix with
+```sh
+$ smatrix create config.toml
+```
+
 ## Example
 
 At its core, the philosophy of `smatrix` is that we can think about commands as distinct from their minutiae parameters. It's a bit like when you first define all your environment variables with `JOBFILE=/file/goes/here` at the top of your script, and then write all of your commands in terms of `$JOBFILE`. In fact, this specific configuration is one way that you can choose to work with `smatrix`: put in your `config.toml`
