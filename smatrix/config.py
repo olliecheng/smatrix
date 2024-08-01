@@ -86,8 +86,8 @@ def validate(input_file):
 
     try:
         config = schema.validate(input_file)
-        config["root_dir"] = get_root_directory(config)
-        config["job_dir"] = config["root_dir"] / "jobs"
+
+        config = interpret_config(config)
 
         log.info("Loaded config:\n%s", pretty_repr(config))
         return config
@@ -106,6 +106,13 @@ def validate(input_file):
 
         # otherwise, propagate
         raise err
+
+
+def interpret_config(config):
+    config["root_dir"] = get_root_directory(config)
+    config["job_dir"] = config["root_dir"] / "jobs"
+
+    return config
 
 
 def get_root_directory(config):

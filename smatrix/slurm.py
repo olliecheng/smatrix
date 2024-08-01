@@ -39,7 +39,8 @@ assert MAIN_EXECUTOR_HEADER.endswith("\n")
 
 
 def create_supplementary_files(cfg):
-    parameters = "\n".join("#SBATCH " + x for x in cfg["general"]["params"])
+    # parameters = "\n".join("#SBATCH " + x for x in cfg["general"]["params"])
+    parameters = cfg["general"]["params"]
 
     if cfg["general"]["concurrent"]:
         concurrent = "%" + str(cfg["general"]["concurrent"])
@@ -48,9 +49,9 @@ def create_supplementary_files(cfg):
 
     with open(cfg["root_dir"] / "executor.sh", "w") as f:
         f.write(
-            MAIN_EXECUTOR_HEADER.format(count_m_1=cfg["count"] - 1,
-                                        concurrent=concurrent,
-                                        **cfg)
+            MAIN_EXECUTOR_HEADER.format(
+                count_m_1=cfg["count"] - 1, concurrent=concurrent, **cfg
+            )
             + parameters
             + MAIN_EXECUTOR_BODY.format(**cfg)
         )
@@ -72,6 +73,7 @@ def execute_batch(cfg):
 
     job_id = groups.group(1)
     return job_id
+
 
 def find_loc_of_executing(args):
     matrix_path = args.matrix_path
@@ -101,9 +103,10 @@ def find_loc_of_executing(args):
             job_id = int(f.read())
     return matrix_path, job_id
 
+
 def ps(args):
     matrix_path, job_id = find_loc_of_executing(args)
-    
+
     log.info(f"Using matrix at location {matrix_path}")
 
     result = subprocess.run(

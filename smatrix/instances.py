@@ -27,9 +27,8 @@ class Instance:
             config.template_envs(self.cfg["general"]["instance_label"], self.env)
         )
 
-        print("")
-        log.info(
-            "[yellow]Instance %d has state: %s[/]",
+        log.debug(
+            "\n[yellow]Instance %d has state: %s[/]",
             self.id,
             self.state,
             extra={"markup": True},
@@ -43,7 +42,7 @@ class Instance:
         for dest_pattern, src_pattern in self.cfg["symlinks"].items():
             for src, dest in self.search_glob(src_pattern, dest_pattern):
                 dest_rel = dest.relative_to(self.dir)
-                log.info(
+                log.debug(
                     f"[bold yellow]Symlink[/]\t'{dest_rel}' ← '{src}'",
                     extra={"markup": True},
                 )
@@ -57,7 +56,7 @@ class Instance:
             for src, dest in self.search_glob(src_pattern, dest_pattern):
                 dest_rel = dest.relative_to(self.dir)
                 template_msg = "✓" if template else "✗"
-                log.info(
+                log.debug(
                     f"[bold bright_cyan]Copy[/]\t'{dest_rel}' ← '{src}' [bright_black][ Template {template_msg} ][/]",
                     extra={"markup": True},
                 )
@@ -126,7 +125,7 @@ class Instance:
         env_file_contents = "\x00".join(envs) + "\x00"
         with open(self.dir / "job_environment", "w") as f:
             f.write(env_file_contents)
-            log.info(
+            log.debug(
                 f"[bold magenta]Write[/]\t'job_environment' (environment variable file)",
                 extra={"markup": True},
             )
@@ -135,7 +134,7 @@ class Instance:
         # an intentional design choice is to NOT use templating here, as all variables will be available to the environment
         with open(self.dir / "job_run.sh", "w") as f:
             f.write(self.cfg["script"]["slurm_exec"])
-            log.info(
+            log.debug(
                 f"[bold magenta]Write[/]\t'job_run.sh' (main SLURM file to be executed)",
                 extra={"markup": True},
             )
@@ -146,7 +145,7 @@ class Instance:
             dest = (self.dir / Path(k)).resolve()
             dest_rel = dest.relative_to(self.dir)
 
-            log.info(
+            log.debug(
                 f"[bold magenta]Write[/]\t'{dest_rel}'",
                 extra={"markup": True},
             )

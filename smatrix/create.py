@@ -24,20 +24,32 @@ def create(args):
         )
         sys.exit(1)
 
-    log.info(f"Using root directory '{cfg['root_dir']}'")
+    log.debug(f"Using root directory '{cfg['root_dir']}'")
 
+    create_from_cfg(args, cfg)
+
+
+def create_from_cfg(args, cfg):
     # will make jobs and root dir (as job dir is a subdirectory)
     os.makedirs(cfg["job_dir"], exist_ok=False)
 
     # create iteration matrix
     # NB: as this requires Python ^3.6, dict key order is preserved
-    keys = cfg["matrix"].keys()
-    values = cfg["matrix"].values()
-    matrix = [
-        (id, dict(zip(keys, inst)))
-        for id, inst in enumerate(itertools.product(*values))
-    ]
-    cfg["count"] = len(matrix)
+    if isinstance(cfg["matrix"], dict):
+        keys = cfg["matrix"].keys()
+        values = cfg["matrix"].values()
+        matrix = [
+            (id, dict(zip(keys, inst)))
+            for id, inst in enumerate(itertools.product(*values))
+        ]
+        cfg["count"] = len(matrix)
+    elif isinstance(cfg["matrix"], list):
+        # iterate through each one
+        matrix = list(enumerate(cfg["matrix"]))
+        cfg["count"] = len(matrix)
+    else:
+        log.error("Matrix is not a dictionary or a list!")
+        raise Exception
 
     for id, state in matrix:
         inst = instances.Instance(state, cfg, id)
@@ -52,7 +64,7 @@ def create(args):
         job_id = slurm.execute_batch(cfg)
         with open(cfg["root_dir"] / "job_id", "w") as f:
             f.write(str(job_id))
-        log.info(
+        log.debug(
             f"[bold yellow]Started matrix with job ID {job_id}[/]",
             extra={"markup": True},
         )
