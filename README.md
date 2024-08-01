@@ -13,6 +13,62 @@ It is not uncommon to want to run the same command, but with minor changes. For 
  <a href="#example">Example</a> &nbsp;&nbsp; | &nbsp;&nbsp; <a href="#usage">Usage</a> &nbsp;&nbsp; | &nbsp;&nbsp; <a href="#installation">Installation</a>
 </div>
 
+## Example
+Create a job array quickly from a CSV table:
+```sh
+smatrix run shell.sh parameters.csv
+```
+If your current directory contains these files...
+<!-- Table from https://gist.github.com/panoply/176101828af8393adc821e49578ac588 -->
+<table>
+<tr>
+  <th width="500px" align="left">shell.sh</th>
+  <th width="500px" align="left">parameters.csv</th>
+</tr>
+<tr width="600px">
+<td>
+
+```sh
+#!/bin/bash
+#SBATCH --cpus-per-task=1
+#SBATCH --ntasks=4
+#SBATCH --time=10:00
+#SBATCH --mem-per-cpu=500
+
+echo "Hello!"
+wc -l $input > $output
+```
+
+</td>
+<td>
+
+```csv
+input,output
+/file_to_read_1.fastq,output1.txt
+/temp_file_to_read_2.fastq,output2.txt
+```
+
+</td>
+</tr>
+</table>
+
+... then this produces two SLURM array jobs. The first job has environment variables
+  
+```
+1=/file_to_read_1.fastq
+2=output1.txt
+```
+
+and the second job has variables
+
+```
+1=/temp_file_to_read_2.fastq
+2=output2.txt
+```
+
+
+
+
 ## Getting started
 You don't need to necessarily read the examples down below to get started. First, install smatrix using:
 ```sh
@@ -27,7 +83,7 @@ Then, once you've configured everything, you can create a matrix with
 $ smatrix create config.toml
 ```
 
-## Example
+## Example2
 
 At its core, the philosophy of `smatrix` is that we can think about commands as distinct from their minutiae parameters. It's a bit like when you first define all your environment variables with `JOBFILE=/file/goes/here` at the top of your script, and then write all of your commands in terms of `$JOBFILE`. In fact, this specific configuration is one way that you can choose to work with `smatrix`: put in your `config.toml`
 
