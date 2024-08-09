@@ -46,7 +46,7 @@ def validate(input_file):
             {
                 "general": {
                     "name": str,
-                    "params": [str],
+                    "params": str,
                     "concurrent": int,
                     # the instance and root labels are both optional
                     Optional(

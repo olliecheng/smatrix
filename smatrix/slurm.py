@@ -40,7 +40,7 @@ assert MAIN_EXECUTOR_HEADER.endswith("\n")
 
 def create_supplementary_files(cfg):
     # parameters = "\n".join("#SBATCH " + x for x in cfg["general"]["params"])
-    parameters = cfg["general"]["params"]
+    parameters = cfg["general"]["params"].strip()
 
     if cfg["general"]["concurrent"]:
         concurrent = "%" + str(cfg["general"]["concurrent"])
